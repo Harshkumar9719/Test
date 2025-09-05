@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Protected — Test</title>
+  <style>
+    body { font-family:Arial,Helvetica,sans-serif; margin:0; padding:0; background:#f5f7fa; }
+    .wrap { max-width:700px; margin:70px auto; background:#fff; padding:26px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.08); }
+    h1 { margin:0 0 10px 0; }
+    .btn { display:inline-block; margin-top:12px; padding:10px 14px; background:#e53e3e; color:#fff; border-radius:8px; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Welcome — Protected Page</h1>
+    <p>This page is intended to be visible only after successful login.</p>
+    <p>If you see this, you passed the client-side check.</p>
+
+    <a href="#" id="logout" class="btn">Logout</a>
+  </div>
+
+  <script>
+    // block access if not authenticated in sessionStorage
+    if (sessionStorage.getItem("site_auth") !== "1") {
+      // not allowed — go back to index
+      location.href = "index.html";
+    }
+
+    document.getElementById("logout").addEventListener("click", (e) => {
+      e.preventDefault();
+      sessionStorage.removeItem("site_auth");
+      location.href = "index.html";
+    });
+  </script>
+</body>
+</html>
