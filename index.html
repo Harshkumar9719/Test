@@ -1,79 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login Page</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login — Test</title>
   <style>
     body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: #f0f2f5;
-      font-family: Arial, sans-serif;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+      background:#f3f5f8;
+      font-family:Arial,Helvetica,sans-serif;
+      margin:0;
     }
-    .login-box {
-      background: #fff;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      width: 300px;
+    .card {
+      width:330px;
+      padding:28px;
+      background:#fff;
+      border-radius:12px;
+      box-shadow:0 8px 22px rgba(0,0,0,0.12);
     }
-    .login-box h2 {
-      text-align: center;
-      margin-bottom: 20px;
+    h2 { text-align:center; margin:0 0 16px 0; font-size:22px; }
+    input {
+      width:100%;
+      padding:10px 12px;
+      margin:8px 0;
+      border-radius:8px;
+      border:1px solid #d0d6db;
+      font-size:15px;
+      box-sizing:border-box;
     }
-    .login-box input {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+    button {
+      width:100%;
+      padding:11px;
+      margin-top:10px;
+      border:none;
+      border-radius:8px;
+      background:#0b79ff;
+      color:#fff;
+      font-size:16px;
+      cursor:pointer;
     }
-    .login-box button {
-      width: 100%;
-      padding: 10px;
-      background: #007bff;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .login-box button:hover {
-      background: #0056b3;
-    }
-    .message {
-      margin-top: 10px;
-      text-align: center;
-      font-size: 14px;
-    }
+    .msg { text-align:center; margin-top:10px; height:18px; font-size:14px; }
+    .small { font-size:12px; color:#666; margin-top:6px; text-align:center; }
   </style>
 </head>
 <body>
-  <div class="login-box">
+  <div class="card">
     <h2>Login</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="checkLogin()">Login</button>
-    <div class="message" id="message"></div>
+    <input id="username" placeholder="Username" autocomplete="username" />
+    <input id="password" type="password" placeholder="Password" autocomplete="current-password" />
+    <button id="btn">Login</button>
+    <div class="msg" id="msg"></div>
+    <div class="small">This is a client-side demo. Not secure for production.</div>
   </div>
 
   <script>
-    function checkLogin() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-      const msg = document.getElementById("message");
+  // ---------- Configuration ----------
+  // Username required:
+  const VALID_USERNAME = "Harsh";
 
-      // Dummy credentials (frontend only)
-      if (user === "admin" && pass === "1234") {
+  // SHA-256 hex of the correct password "97199":
+  // precomputed: a4663f38e4b4e526826d7e8e973c937fa7f241f34d8ad9f96943f3a43eefe9bc
+  const CORRECT_PASSWORD_SHA256 = "a4663f38e4b4e526826d7e8e973c937fa7f241f34d8ad9f96943f3a43eefe9bc";
+
+  // Destination after success:
+  const PROTECTED_PAGE = "protected.html";
+
+  // ---------- Helpers ----------
+  async function sha256Hex(text) {
+    const enc = new TextEncoder();
+    const data = enc.encode(text);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    // convert to hex
+    const arr = Array.from(new Uint8Array(hash));
+    return arr.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // ---------- Login flow ----------
+  const btn = document.getElementById("btn");
+  const msg = document.getElementById("msg");
+
+  btn.addEventListener("click", async () => {
+    msg.textContent = "";
+    const user = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value;
+
+    if (!user || !pass) {
+      msg.style.color = "red";
+      msg.textContent = "Please enter username and password.";
+      return;
+    }
+
+    if (user !== VALID_USERNAME) {
+      msg.style.color = "red";
+      msg.textContent = "Invalid username or password.";
+      return;
+    }
+
+    // compute sha256 and compare
+    try {
+      btn.disabled = true;
+      btn.textContent = "Checking...";
+      const h = await sha256Hex(pass);
+
+      if (h === CORRECT_PASSWORD_SHA256) {
+        // mark session and redirect
+        sessionStorage.setItem("site_auth", "1");
         msg.style.color = "green";
-        msg.innerText = "✅ Login successful!";
+        msg.textContent = "Login successful! Redirecting…";
+        setTimeout(() => {
+          location.href = PROTECTED_PAGE;
+        }, 700);
       } else {
         msg.style.color = "red";
-        msg.innerText = "❌ Invalid username or password.";
+        msg.textContent = "Invalid username or password.";
       }
+    } catch (e) {
+      console.error(e);
+      msg.style.color = "red";
+      msg.textContent = "Error during check.";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Login";
     }
+  });
+
+  // Optional: Enter key support
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") btn.click();
+  });
   </script>
 </body>
 </html>
